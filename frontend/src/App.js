@@ -75,7 +75,7 @@ function App() {
           );
 
           const marketplaceListings = [];
-          for (let tid = 0; tid < Number(sold); tid++) {
+          for (let tid = 1; tid <= Number(sold); tid++) {
             const l = await ev.listings(tid);
             if (l.seller && l.seller !== ethers.ZeroAddress) {
               marketplaceListings.push({
