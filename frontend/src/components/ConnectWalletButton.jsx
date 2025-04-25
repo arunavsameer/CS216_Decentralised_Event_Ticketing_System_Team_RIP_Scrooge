@@ -3,6 +3,8 @@ import React from "react";
 
 export default function ConnectWalletButton({ onConnect }) {
   return (
-    <button onClick={onConnect}>Connect MetaMask</button>
+    <button className="connect-btn" onClick={onConnect}>
+      <span role="img" aria-label="wallet">👛</span> Connect MetaMask
+    </button>
   );
 }
