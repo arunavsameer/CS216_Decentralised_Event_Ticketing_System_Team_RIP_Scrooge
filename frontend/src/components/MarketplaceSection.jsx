@@ -1,5 +1,6 @@
 // src/components/MarketplaceSection.jsx
 import React from "react";
+import './MarketplaceSection.css'; 
 
 export default function MarketplaceSection({ 
   events, 

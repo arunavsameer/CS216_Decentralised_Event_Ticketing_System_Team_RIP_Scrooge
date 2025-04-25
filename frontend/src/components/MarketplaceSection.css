@@ -1,0 +1,85 @@
+.marketplace-section {
+    background-color: var(--card-bg);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2.5rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  
+  .marketplace-event {
+    margin-bottom: 2.5rem;
+  }
+  
+  .marketplace-event h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--lighter);
+  }
+  
+  .marketplace-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+  
+  .listing-card {
+    background-color: var(--dark);
+    border-radius: 12px;
+    padding: 1.25rem;
+    border: 1px solid var(--border-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  .listing-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+  }
+  
+  .listing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .listing-price-tag {
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: var(--secondary);
+  }
+  
+  .listing-meta {
+    margin: 1.25rem 0;
+  }
+  
+  .meta-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.65rem;
+    font-size: 0.9rem;
+  }
+  
+  .meta-label {
+    color: var(--gray);
+    font-weight: 500;
+  }
+  
+  .meta-value {
+    color: var(--lighter);
+    font-weight: 600;
+  }
+  
+  .marketplace-empty {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: var(--gray);
+    background-color: var(--dark);
+    border-radius: 16px;
+    border: 1px dashed var(--border-color);
+  }

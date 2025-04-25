@@ -1,5 +1,6 @@
 // src/components/ConnectWalletButton.jsx
 import React from "react";
+import './ConnectWalletButton.css';
 
 export default function ConnectWalletButton({ onConnect }) {
   return (

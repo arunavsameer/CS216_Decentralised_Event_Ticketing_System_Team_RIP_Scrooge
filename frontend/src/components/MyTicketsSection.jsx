@@ -1,6 +1,7 @@
 // src/components/MyTicketsSection.jsx
 import React from "react";
 import TicketItem from "./TicketItem";
+import './MyTicketsSection.css'; 
 
 export default function MyTicketsSection({ 
   events, 

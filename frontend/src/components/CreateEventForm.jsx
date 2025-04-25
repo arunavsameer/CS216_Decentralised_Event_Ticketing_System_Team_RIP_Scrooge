@@ -1,5 +1,6 @@
 // src/components/CreateEventForm.jsx
 import React, { useState } from "react";
+import './CreateEventForm.css';
 
 export default function CreateEventForm({ onCreate }) {
   const [form, setForm] = useState({ name: "", date: "", price: "", max: "" });

@@ -1,0 +1,44 @@
+.my-tickets-section {
+    background-color: var(--card-bg);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2.5rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+  
+  .event-tickets h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--lighter);
+  }
+  
+  .tickets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+  
+  .my-tickets {
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+  }
+  
+  .tickets-title {
+    font-size: 1.2rem;
+    margin-bottom: 1.25rem;
+    color: var(--lighter);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+  }
+  
+  .no-tickets {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--gray);
+  }

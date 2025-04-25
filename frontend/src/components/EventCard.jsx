@@ -1,5 +1,6 @@
 // src/components/EventCard.jsx
 import React from "react";
+import './EventCard.css';
 
 export default function EventCard({
   event,

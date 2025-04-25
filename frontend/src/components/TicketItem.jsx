@@ -1,5 +1,6 @@
 // src/components/TicketItem.jsx
 import React, { useState } from "react";
+import './TicketItem.css'; 
 
 export default function TicketItem({
   ticketId,
