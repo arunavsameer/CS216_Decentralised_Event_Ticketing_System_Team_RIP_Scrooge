@@ -1,0 +1,56 @@
+.expanded-ticket {
+    background-color: var(--darker);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  
+  .expanded-header {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  .back-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    color: var(--light);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.5
+rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+  }
+  
+  .back-button:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--lighter);
+  }
+  
+  .ticket-hero {
+    position: relative;
+  }
+  
+  .ticket-banner {
+    height: 240px;
+    background: linear-gradient(135deg, #4f46e5, #10b981);
+    position: relative;
+  }
+  
+  .ticket-title {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 2rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+  }
+    

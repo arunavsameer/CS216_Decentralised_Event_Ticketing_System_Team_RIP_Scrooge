@@ -222,3 +222,14 @@ body {
   max-width: 400px;
   margin: 0 auto;
 }
+
+/* Add this to App.css */
+button, [role="button"] {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* Ensure no iframe is blocking clicks */
+iframe {
+  pointer-events: none !important;
+}
