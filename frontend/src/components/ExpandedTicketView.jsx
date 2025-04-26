@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import './ExpandedTicketView.css';
+import { transferTicket, listTicket, cancelListing } from "../utils/TicketUtils";
 
 export default function ExpandedTicketView({
   event,
@@ -8,7 +9,8 @@ export default function ExpandedTicketView({
   onTransfer,
   onList,
   onCancel,
-  currentAddress
+  currentAddress,
+  signer
 }) {
   const [recipient, setRecipient] = useState("");
   const [listingPrice, setListingPrice] = useState("");
@@ -106,15 +108,6 @@ export default function ExpandedTicketView({
                   </>
                 )}
               </div>
-
-              {/* <div className="ticket-qr">
-                <div className="qr-code">
-                  <div className="qr-placeholder">
-                    QR Code for Ticket #{ticketId}
-                  </div>
-                </div>
-                <p className="qr-help">Show this QR code at the event entrance</p>
-              </div> */}
             </div>
           )}
 
@@ -150,8 +143,7 @@ export default function ExpandedTicketView({
                         <label>Listing Duration (hours)</label>
                         <input
                           type="number"
-                          // step="0.001"
-                          placeholder="0.1"
+                          placeholder="24"
                           value={listingExpiry}
                           onChange={(e) => setListingExpiry(e.target.value)}
                         />

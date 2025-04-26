@@ -233,3 +233,38 @@ button, [role="button"] {
 iframe {
   pointer-events: none !important;
 }
+
+
+/* Add this to your existing App.css file */
+
+/* Logout Button */
+.logout-button {
+  background-color: transparent;
+  color: var(--gray);
+  border: none;
+  border-radius: 8px;
+  padding: 0.3rem 0.8rem;
+  margin-left: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 1px solid var(--border-color);
+}
+
+.logout-button:hover {
+  color: var(--error);
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* Update the wallet-info class to accommodate the logout button */
+.wallet-info {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.5rem 0.5rem 1.25rem;
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border-color);
+}

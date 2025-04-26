@@ -9,6 +9,14 @@ import MarketplaceSection from "./components/MarketplaceSection";
 import MyTicketsSection from "./components/MyTicketsSection";
 import FactoryJSON from "./abis/EventFactory.json";
 import EventJSON from "./abis/Event.json";
+import { 
+  buyTicket, 
+  transferTicket, 
+  listTicket, 
+  cancelListing, 
+  buyListedTicket, 
+  createEvent 
+} from "./utils/TicketUtils";
 import "./App.css";
 
 function App() {
@@ -23,56 +31,11 @@ function App() {
   const [expandedTicket, setExpandedTicket] = useState(null);
   const [previousTab, setPreviousTab] = useState(null);
 
-  // Connect wallet
-  // In App.js - Update the connectWallet function
-const connectWallet = async () => {
-  // Check if MetaMask is installed
-  if (!window.ethereum?.isMetaMask) {
-    setStatus("Please install MetaMask extension");
-    setStatusType("error");
-    return;
-  }
-
-  try {
-    setStatus("Connecting wallet...");
-    setStatusType("info");
-    
-    // Directly use window.ethereum instead of ethers.BrowserProvider
-    const accounts = await window.ethereum.request({ 
-      method: "eth_requestAccounts" 
-    });
-
-    if (!accounts || accounts.length === 0) {
-      throw new Error("No accounts found");
-    }
-
-    // Initialize ethers provider after successful connection
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const address = await signer.getAddress();
-
-    setSigner(signer);
-    setUserAddress(address);
-    
-    // Initialize contract after wallet connection
-    const factoryAddress = process.env.REACT_APP_FACTORY_ADDRESS;
-    setFactory(new ethers.Contract(factoryAddress, FactoryJSON.abi, signer));
-    
-    setStatus("Wallet connected successfully");
-    setStatusType("success");
-
-  } catch (error) {
-    console.error("Connection error:", error);
-    setStatus(error.message || "Failed to connect wallet");
-    setStatusType("error");
-    
-    // Reset connection state on error
-    setUserAddress(null);
-    setSigner(null);
-    setFactory(null);
-  }
-};
-
+  const handleDisconnect = () => {
+    setActiveTab("events");
+    setExpandedEvent(null);
+    setExpandedTicket(null);
+  };
 
   // Load all event data
   const loadEventDetails = useCallback(async () => {
@@ -184,20 +147,30 @@ const connectWallet = async () => {
     }
   };
 
-  // In App.js - Add this useEffect
-useEffect(() => {
-  if (!window.ethereum) return;
-
-  const handleAccountsChanged = (accounts) => {
-    if (accounts.length === 0) {
-      // MetaMask locked or user disconnected all accounts
-      setUserAddress(null);
-      setSigner(null);
-      setFactory(null);
-    }
+  // Handle tab changes - modified to also close expanded views
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    // Close expanded views when switching tabs
+    setExpandedEvent(null);
+    setExpandedTicket(null);
+    // Update browser history
+    window.history.pushState({}, '', '#');
   };
 
-  const handleChainChanged = () => {
+  // In App.js - Add this useEffect
+  useEffect(() => {
+    if (!window.ethereum) return;
+
+    const handleAccountsChanged = (accounts) => {
+      if (accounts.length === 0) {
+        // MetaMask locked or user disconnected all accounts
+        setUserAddress(null);
+        setSigner(null);
+        setFactory(null);
+      }
+    };
+
+    const handleChainChanged = () => {
       window.location.reload();
     };
 
@@ -209,7 +182,6 @@ useEffect(() => {
       window.ethereum.removeListener('chainChanged', handleChainChanged);
     };
   }, []);
-
 
   // Listen for popstate (browser back button)
   useEffect(() => {
@@ -233,127 +205,38 @@ useEffect(() => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [eventDetails]);
 
-  // Handlers
-  const createEvent = async ({ name, date, price, max }) => {
-    try {
-      setStatus("Creating event...");
-      setStatusType("info");
-      const tx = await factory.createEvent(
-        name,
-        Math.floor(date),
-        ethers.parseEther(price),
-        parseInt(max, 10)
-      );
-      setStatus("Transaction submitted. Waiting for confirmation...");
-      await tx.wait();
-      setStatus("Event created successfully!");
-      setStatusType("success");
-      loadEventDetails();
-    } catch (err) {
-      console.error("Error creating event:", err);
-      setStatus("Failed to create event: " + err.message);
-      setStatusType("error");
-    }
+  // Callbacks to pass to the utility functions
+  const statusCallbacks = {
+    onStatus: (message, type) => {
+      setStatus(message);
+      setStatusType(type);
+    },
+    onSuccess: loadEventDetails
   };
 
-  const buyTicket = async (addr, price) => {
-    try {
-      setStatus("Buying ticket...");
-      setStatusType("info");
-      const ev = new ethers.Contract(addr, EventJSON.abi, signer);
-      const tx = await ev.buyTicket({ value: ethers.parseEther(price) });
-      setStatus("Transaction submitted. Waiting for confirmation...");
-      await tx.wait();
-      setStatus("Ticket purchased successfully!");
-      setStatusType("success");
-      loadEventDetails();
-    } catch (err) {
-      console.error("Error buying ticket:", err);
-      setStatus("Failed to buy ticket: " + err.message);
-      setStatusType("error");
-    }
+  // Create wrappers for the utility functions to pass required parameters
+  const handleCreateEvent = (eventData) => {
+    createEvent(factory, eventData, statusCallbacks);
   };
 
-  const transferTicket = async (addr, tid, to) => {
-    try {
-      setStatus("Transferring ticket...");
-      setStatusType("info");
-      const ev = new ethers.Contract(addr, EventJSON.abi, signer);
-      const tx = await ev.transferTicket(to, tid);
-      setStatus("Transaction submitted. Waiting for confirmation...");
-      await tx.wait();
-      setStatus("Ticket transferred successfully!");
-      setStatusType("success");
-      loadEventDetails();
-    } catch (err) {
-      console.error("Error transferring ticket:", err);
-      setStatus("Failed to transfer ticket: " + err.message);
-      setStatusType("error");
-    }
+  const handleBuyTicket = (addr, price) => {
+    buyTicket(signer, addr, price, statusCallbacks);
   };
 
-  const listTicket = async (addr, tid, price, expires) => {
-    try {
-      setStatus("Approving ticket for listing...");
-      setStatusType("info");
-      const ev = new ethers.Contract(addr, EventJSON.abi, signer);
-      const approvalTx = await ev.approve(addr, tid);
-      setStatus("Approval submitted. Waiting for confirmation...");
-      await approvalTx.wait();
-      setStatus("Listing ticket...");
-      const tx = await ev.listTicket(tid, ethers.parseEther(price), Number(expires));
-      setStatus("Transaction submitted. Waiting for confirmation...");
-      await tx.wait();
-      setStatus("Ticket listed successfully!");
-      setStatusType("success");
-      loadEventDetails();
-    } catch (err) {
-      console.error("Error listing ticket:", err);
-      setStatus("Failed to list ticket: " + err.message);
-      setStatusType("error");
-    }
+  const handleTransferTicket = (addr, tid, to) => {
+    transferTicket(signer, addr, tid, to, statusCallbacks);
   };
 
-  const cancelListing = async (addr, tid) => {
-    try {
-      setStatus("Canceling listing...");
-      setStatusType("info");
-      const ev = new ethers.Contract(addr, EventJSON.abi, signer);
-      const tx = await ev.cancelListing(tid);
-      setStatus("Transaction submitted. Waiting for confirmation...");
-      await tx.wait();
-      setStatus("Listing canceled successfully!");
-      setStatusType("success");
-      loadEventDetails();
-    } catch (err) {
-      console.error("Error canceling listing:", err);
-      setStatus("Failed to cancel listing: " + err.message);
-      setStatusType("error");
-    }
+  const handleListTicket = (addr, tid, price, expires) => {
+    listTicket(signer, addr, tid, price, expires, statusCallbacks);
   };
 
-  const buyListedTicket = async (addr, tid, price) => {
-    try {
-      setStatus("Buying listed ticket...");
-      setStatusType("info");
-      const ev = new ethers.Contract(addr, EventJSON.abi, signer);
-      const tx = await ev.buyListedTicket(tid, { value: ethers.parseEther(price) });
-      setStatus("Transaction submitted. Waiting for confirmation...");
-      await tx.wait();
-      setStatus("Ticket purchased from marketplace successfully!");
-      setStatusType("success");
-      loadEventDetails();
-    } catch (err) {
-      console.error("Error buying listed ticket:", err);
-      setStatus("Failed to buy listed ticket: " + err.message);
-      setStatusType("error");
-    }
+  const handleCancelListing = (addr, tid) => {
+    cancelListing(signer, addr, tid, statusCallbacks);
   };
 
-  // Helper to format address
-  const formatAddress = (address) => {
-    if (!address) return '';
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  const handleBuyListedTicket = (addr, tid, price) => {
+    buyListedTicket(signer, addr, tid, price, statusCallbacks);
   };
 
   // Count all my tickets across all events
@@ -372,10 +255,11 @@ useEffect(() => {
           event={expandedTicket.event} 
           ticketId={expandedTicket.ticketId}
           onBack={handleBack}
-          onTransfer={(to) => transferTicket(expandedTicket.event.address, expandedTicket.ticketId, to)}
-          onList={(price, expires) => listTicket(expandedTicket.event.address, expandedTicket.ticketId, price, expires)}
-          onCancel={() => cancelListing(expandedTicket.event.address, expandedTicket.ticketId)}
+          onTransfer={(to) => handleTransferTicket(expandedTicket.event.address, expandedTicket.ticketId, to)}
+          onList={(price, expires) => handleListTicket(expandedTicket.event.address, expandedTicket.ticketId, price, expires)}
+          onCancel={() => handleCancelListing(expandedTicket.event.address, expandedTicket.ticketId)}
           currentAddress={userAddress}
+          signer={signer}
         />
       );
     }
@@ -385,9 +269,13 @@ useEffect(() => {
         <ExpandedEventView 
           event={expandedEvent}
           onBack={handleBack}
-          onBuyTicket={() => buyTicket(expandedEvent.address, expandedEvent.price)}
+          onBuyTicket={() => handleBuyTicket(expandedEvent.address, expandedEvent.price)}
           onExpandTicket={(ticketId) => handleExpandTicket(expandedEvent.address, ticketId)}
+          onTransfer={handleTransferTicket}
+          onList={handleListTicket}
+          onCancel={handleCancelListing}
           currentAddress={userAddress}
+          signer={signer}
         />
       );
     }
@@ -404,8 +292,9 @@ useEffect(() => {
                   key={event.address}
                   event={event}
                   currentAddress={userAddress}
-                  onBuyTicket={() => buyTicket(event.address, event.price)}
+                  onBuyTicket={() => handleBuyTicket(event.address, event.price)}
                   onExpand={() => handleExpandEvent(event.address)}
+                  signer={signer}
                 />
               ))}
             </div>
@@ -416,10 +305,11 @@ useEffect(() => {
           <MyTicketsSection
             events={eventDetails}
             currentAddress={userAddress}
-            onTransfer={transferTicket}
-            onList={listTicket}
-            onCancel={cancelListing}
+            onTransfer={handleTransferTicket}
+            onList={handleListTicket}
+            onCancel={handleCancelListing}
             onExpandTicket={handleExpandTicket}
+            signer={signer}
           />
         );
       case "marketplace":
@@ -427,13 +317,14 @@ useEffect(() => {
           <MarketplaceSection
             events={eventDetails}
             currentAddress={userAddress}
-            onBuy={buyListedTicket}
+            onBuy={handleBuyListedTicket}
             onExpandEvent={handleExpandEvent}
             onExpandTicket={handleExpandTicket}
+            signer={signer}
           />
         );
       case "createEvent":
-        return <CreateEventForm onCreate={createEvent} />;
+        return <CreateEventForm onCreate={handleCreateEvent} />;
       default:
         return null;
     }
@@ -446,13 +337,18 @@ useEffect(() => {
           <h1 className="app-title">
             <span>NFTickets</span>
           </h1>
-          {userAddress ? (
-            <div className="wallet-info">
-              <span className="address-display">{formatAddress(userAddress)}</span>
-            </div>
-          ) : (
-            <ConnectWalletButton onClick={connectWallet} />  // Pass connectWallet as onClick
-          )}
+          <ConnectWalletButton 
+            onConnect={() => loadEventDetails()} // Load events after connection
+            onDisconnect={handleDisconnect}
+            setStatus={setStatus}
+            setStatusType={setStatusType}
+            setSigner={setSigner}
+            setUserAddress={setUserAddress}
+            setFactory={setFactory}
+            userAddress={userAddress}
+            factoryAddress={process.env.REACT_APP_FACTORY_ADDRESS}
+            factoryABI={FactoryJSON.abi}
+          />
         </header>
 
         {userAddress && (
@@ -460,13 +356,13 @@ useEffect(() => {
             <ul className="nav-tabs">
               <li
                 className={`nav-item ${activeTab === "events" ? "active" : ""}`}
-                onClick={() => setActiveTab("events")}
+                onClick={() => handleTabChange("events")}
               >
                 Events
               </li>
               <li
                 className={`nav-item ${activeTab === "myTickets" ? "active" : ""}`}
-                onClick={() => setActiveTab("myTickets")}
+                onClick={() => handleTabChange("myTickets")}
               >
                 My Tickets
                 {totalMyTickets > 0 && (
@@ -475,7 +371,7 @@ useEffect(() => {
               </li>
               <li
                 className={`nav-item ${activeTab === "marketplace" ? "active" : ""}`}
-                onClick={() => setActiveTab("marketplace")}
+                onClick={() => handleTabChange("marketplace")}
               >
                 Marketplace
                 {totalMarketListings > 0 && (
@@ -484,7 +380,7 @@ useEffect(() => {
               </li>
               <li
                 className={`nav-item ${activeTab === "createEvent" ? "active" : ""}`}
-                onClick={() => setActiveTab("createEvent")}
+                onClick={() => handleTabChange("createEvent")}
               >
                 Create Event
               </li>
