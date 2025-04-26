@@ -1,10 +1,11 @@
-import React, { useState } from "react";
-import './ExpandedTicketView.css';
+import React, { useState, useEffect } from "react";
+import './TicketModal.css';
 
-export default function ExpandedTicketView({
+export default function TicketModal({
+  isOpen,
+  onClose,
   event,
   ticketId,
-  onBack,
   onTransfer,
   onList,
   onCancel,
@@ -16,11 +17,20 @@ export default function ExpandedTicketView({
   const [activeTab, setActiveTab] = useState("details");
 
   // Find if this ticket is listed
-  const myTickets = event.myTickets || [];
+  const myTickets = event?.myTickets || [];
   const isMyTicket = myTickets.includes(Number(ticketId));
-  const listing = event.myListings?.find(l => l.ticketId === Number(ticketId)) ||
-    event.marketplaceListings?.find(l => l.ticketId === Number(ticketId));
+  const listing = event?.myListings?.find(l => l.ticketId === Number(ticketId)) ||
+    event?.marketplaceListings?.find(l => l.ticketId === Number(ticketId));
   const isListed = listing && listing.seller !== "0x0000000000000000000000000000000000000000";
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setRecipient("");
+      setListingPrice("");
+      setListingExpiry("24");
+    }
+  }, [isOpen]);
 
   const handleTransfer = () => {
     if (!recipient) return;
@@ -39,47 +49,43 @@ export default function ExpandedTicketView({
     onCancel();
   };
 
+  // If modal is not open or no event is provided, don't render
+  if (!isOpen || !event) return null;
+
   return (
-    <div className="expanded-ticket">
-      <div className="expanded-header">
-        <button className="back-button" onClick={onBack}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 12H5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M12 19L5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Back
-        </button>
-      </div>
-
-      <div className="ticket-container">
-        <div className="ticket-hero">
-          <div className="ticket-banner"></div>
-          <div className="ticket-header-info">
-            <h1 className="ticket-title">Ticket #{ticketId}</h1>
-            {/* <h2 className="event-name">{event.name}</h2> */}
-          </div>
-        </div>
-
-        <div className="ticket-tabs">
-          <button
-            className={`tab-btn ${activeTab === 'details' ? 'active' : ''}`}
-            onClick={() => setActiveTab('details')}
-          >
-            Details
+    <div className="ticket-modal-overlay">
+      <div className="ticket-modal">
+        <div className="modal-header">
+          <h2 className="modal-title">Ticket #{ticketId}</h2>
+          <button className="close-button" onClick={onClose}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
-          {isMyTicket && (
-            <button
-              className={`tab-btn ${activeTab === 'manage' ? 'active' : ''}`}
-              onClick={() => setActiveTab('manage')}
-            >
-              Manage
-            </button>
-          )}
         </div>
+        
+        <div className="modal-content">
+          <div className="ticket-tabs">
+            <button
+              className={`tab-btn ${activeTab === 'details' ? 'active' : ''}`}
+              onClick={() => setActiveTab('details')}
+            >
+              Details
+            </button>
+            {isMyTicket && (
+              <button
+                className={`tab-btn ${activeTab === 'manage' ? 'active' : ''}`}
+                onClick={() => setActiveTab('manage')}
+              >
+                Manage
+              </button>
+            )}
+          </div>
 
-        <div className="ticket-content">
           {activeTab === 'details' && (
             <div className="ticket-details-tab">
+              <div className="event-banner-small"></div>
               <div className="ticket-info-grid">
                 <div className="info-item">
                   <h3>Event</h3>
@@ -106,15 +112,6 @@ export default function ExpandedTicketView({
                   </>
                 )}
               </div>
-
-              {/* <div className="ticket-qr">
-                <div className="qr-code">
-                  <div className="qr-placeholder">
-                    QR Code for Ticket #{ticketId}
-                  </div>
-                </div>
-                <p className="qr-help">Show this QR code at the event entrance</p>
-              </div> */}
             </div>
           )}
 
@@ -127,7 +124,7 @@ export default function ExpandedTicketView({
                     <p>Your ticket is currently listed for {listing.price} ETH</p>
                     <p>Listing expires: {listing.expiresAt}</p>
                   </div>
-                  <button className="cancel-btn" onClick={handleCancelListing}>
+                  <button className="action-button danger" onClick={handleCancelListing}>
                     Cancel Listing
                   </button>
                 </div>
@@ -135,7 +132,7 @@ export default function ExpandedTicketView({
                 <>
                   <div className="manage-section">
                     <h3>List on Marketplace</h3>
-                    <div className="formcontainer">
+                    <div className="form-container">
                       <div className="form-group">
                         <label>Price (ETH)</label>
                         <input
@@ -144,19 +141,20 @@ export default function ExpandedTicketView({
                           placeholder="0.1"
                           value={listingPrice}
                           onChange={(e) => setListingPrice(e.target.value)}
+                          className="modern-input"
                         />
                       </div>
                       <div className="form-group">
                         <label>Listing Duration (hours)</label>
                         <input
                           type="number"
-                          // step="0.001"
-                          placeholder="0.1"
+                          placeholder="24"
                           value={listingExpiry}
                           onChange={(e) => setListingExpiry(e.target.value)}
+                          className="modern-input"
                         />
                       </div>
-                      <button className="list-btn" onClick={handleListing}>
+                      <button className="action-button primary" onClick={handleListing}>
                         List Ticket
                       </button>
                     </div>
@@ -173,9 +171,10 @@ export default function ExpandedTicketView({
                         placeholder="0x..."
                         value={recipient}
                         onChange={(e) => setRecipient(e.target.value)}
+                        className="modern-input"
                       />
                     </div>
-                    <button className="transfer-btn" onClick={handleTransfer}>
+                    <button className="action-button secondary" onClick={handleTransfer}>
                       Transfer Ticket
                     </button>
                   </div>

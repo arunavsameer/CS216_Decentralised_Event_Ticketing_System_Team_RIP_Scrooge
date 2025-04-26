@@ -1,11 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import './ExpandedEventView.css';
+import TicketModal from './TicketModal';
 
 export default function ExpandedEventView({ 
   event, 
   onBack, 
   onBuyTicket, 
-  onExpandTicket,
+  onTransfer,
+  onList,
+  onCancel,
   currentAddress 
 }) {
   const isExpired = event.rawDate < Math.floor(Date.now() / 1000);
@@ -13,6 +16,32 @@ export default function ExpandedEventView({
   
   // Find tickets owned by current user
   const myTickets = event.myTickets || [];
+  
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  
+  // Handle opening the ticket modal
+  const handleTicketClick = (ticketId) => {
+    setSelectedTicket(ticketId);
+    setModalOpen(true);
+  };
+  
+  // Handle ticket operations
+  const handleTransfer = (recipient) => {
+    onTransfer(event.address, selectedTicket, recipient);
+    setModalOpen(false);
+  };
+  
+  const handleList = (price, expiryTimestamp) => {
+    onList(event.address, selectedTicket, price, expiryTimestamp);
+    setModalOpen(false);
+  };
+  
+  const handleCancel = () => {
+    onCancel(event.address, selectedTicket);
+    setModalOpen(false);
+  };
   
   return (
     <div className="expanded-event">
@@ -89,7 +118,7 @@ export default function ExpandedEventView({
                     <div 
                       key={ticketId} 
                       className={`ticket-card ${isListed ? 'listed' : ''}`}
-                      onClick={() => onExpandTicket(ticketId)}
+                      onClick={() => handleTicketClick(ticketId)}
                     >
                       <div className="ticket-header">
                         <span className="ticket-id">Ticket #{ticketId}</span>
@@ -122,7 +151,7 @@ export default function ExpandedEventView({
                   <div 
                     key={listing.ticketId} 
                     className="ticket-card marketplace"
-                    onClick={() => onExpandTicket(listing.ticketId)}
+                    onClick={() => handleTicketClick(listing.ticketId)}
                   >
                     <div className="ticket-header">
                       <span className="ticket-id">Ticket #{listing.ticketId}</span>
@@ -143,6 +172,18 @@ export default function ExpandedEventView({
           )}
         </div>
       </div>
+      
+      {/* Ticket Modal */}
+      <TicketModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        event={event}
+        ticketId={selectedTicket}
+        onTransfer={handleTransfer}
+        onList={handleList}
+        onCancel={handleCancel}
+        currentAddress={currentAddress}
+      />
     </div>
   );
 }

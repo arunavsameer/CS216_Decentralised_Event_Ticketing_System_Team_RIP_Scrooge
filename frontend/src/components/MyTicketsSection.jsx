@@ -1,16 +1,44 @@
-import React from "react";
+import React, { useState } from "react";
 import './MyTicketsSection.css';
+import TicketModal from './TicketModal';
 
 export default function MyTicketsSection({ 
   events, 
   currentAddress, 
   onTransfer, 
   onList, 
-  onCancel,
-  onExpandTicket
+  onCancel
 }) {
+  // New state for modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  
   // Filter events where the user has tickets
   const eventsWithMyTickets = events.filter(ev => ev.myTickets && ev.myTickets.length > 0);
+  
+  // Handle opening the ticket modal
+  const handleTicketClick = (event, ticketId) => {
+    setSelectedEvent(event);
+    setSelectedTicket(ticketId);
+    setModalOpen(true);
+  };
+  
+  // Handle ticket operations
+  const handleTransfer = (recipient) => {
+    onTransfer(selectedEvent.address, selectedTicket, recipient);
+    setModalOpen(false);
+  };
+  
+  const handleList = (price, expiryTimestamp) => {
+    onList(selectedEvent.address, selectedTicket, price, expiryTimestamp);
+    setModalOpen(false);
+  };
+  
+  const handleCancel = () => {
+    onCancel(selectedEvent.address, selectedTicket);
+    setModalOpen(false);
+  };
   
   if (eventsWithMyTickets.length === 0) {
     return (
@@ -40,7 +68,7 @@ export default function MyTicketsSection({
                 <div 
                   key={ticketId} 
                   className={`ticket-card ${isListed ? 'listed' : ''}`}
-                  onClick={() => onExpandTicket(event.address, ticketId)}
+                  onClick={() => handleTicketClick(event, ticketId)}
                 >
                   <div className="ticket-header">
                     <span className="ticket-id">Ticket #{ticketId}</span>
@@ -64,6 +92,18 @@ export default function MyTicketsSection({
           </div>
         </div>
       ))}
+      
+      {/* Ticket Modal */}
+      <TicketModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        event={selectedEvent}
+        ticketId={selectedTicket}
+        onTransfer={handleTransfer}
+        onList={handleList}
+        onCancel={handleCancel}
+        currentAddress={currentAddress}
+      />
     </div>
   );
 }
