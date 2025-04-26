@@ -11,6 +11,9 @@ contract Event is ERC721, ReentrancyGuard {
     uint256 public maxSupply;
     uint256 public sold;
     address public organizer;
+    
+    // Store IPFS URI for event metadata (containing both description and image)
+    string public eventMetadataURI;
 
     uint256 private nextTicketId;
     uint256[] private soldTickets;
@@ -28,6 +31,7 @@ contract Event is ERC721, ReentrancyGuard {
 
     event TicketPurchased(address indexed buyer, uint256 indexed ticketId);
     event TicketTransferred(address indexed from, address indexed to, uint256 indexed ticketId);
+    event MetadataUpdated(address indexed organizer, string metadataURI);
     event TicketListed(address indexed seller, uint256 indexed ticketId, uint256 price, uint256 expiresAt);
     event TicketSale(address indexed buyer, address indexed seller, uint256 indexed ticketId, uint256 price);
     event ListingCancelled(address indexed seller, uint256 indexed ticketId);
@@ -42,13 +46,20 @@ contract Event is ERC721, ReentrancyGuard {
         uint256 _date,
         uint256 _price,
         uint256 _supply,
-        address _organizer
+        address _organizer,
+        string memory _metadata
     ) ERC721("EventTicket", "ETIX") {
         eventName = _name;
         eventDate = _date;
         ticketPrice = _price;
         maxSupply = _supply;
         organizer = _organizer;
+        eventMetadataURI = _metadata;
+    }
+
+    function setMetadataURI(string memory _metadataURI) external onlyOrganizer {
+        eventMetadataURI = _metadataURI;
+        emit MetadataUpdated(msg.sender, _metadataURI);
     }
 
     function buyTicket() external payable nonReentrant {
@@ -65,6 +76,7 @@ contract Event is ERC721, ReentrancyGuard {
         ownerTokens[msg.sender].push(tid);
 
         payable(organizer).transfer(msg.value);
+
         emit TicketPurchased(msg.sender, tid);
     }
 
@@ -86,8 +98,6 @@ contract Event is ERC721, ReentrancyGuard {
     function getSoldTickets() external view onlyOrganizer returns (uint256[] memory) {
         return soldTickets;
     }
-
-    // ─────── LISTINGS ──────────────────────
 
     function listTicket(uint256 tokenId, uint256 price, uint256 expiresAt) external {
         require(ownerOf(tokenId) == msg.sender, "Not owner");

@@ -1,6 +1,43 @@
 import { ethers } from "ethers";
 import EventJSON from "../abis/Event.json";
 
+// Function to upload a file to Pinata
+const uploadFileToPinata = async (file) => {
+  const url = "https://api.pinata.cloud/pinning/pinFileToIPFS";
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.REACT_APP_PINATA_JWT}`,
+    },
+    body: formData,
+  });
+
+  if (!res.ok) throw new Error("File upload failed");
+  const data = await res.json();
+  return `ipfs://${data.IpfsHash}`;
+};
+
+// Function to upload JSON to Pinata
+const uploadJSONToPinata = async (json) => {
+  const url = "https://api.pinata.cloud/pinning/pinJSONToIPFS";
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.REACT_APP_PINATA_JWT}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(json),
+  });
+
+  if (!res.ok) throw new Error("Metadata upload failed");
+  const data = await res.json();
+  return `ipfs://${data.IpfsHash}`;
+};
+
 export const buyTicket = async (signer, addr, price, callbacks = {}) => {
   const { onStatus, onSuccess } = callbacks;
   try {
@@ -85,9 +122,64 @@ export const buyListedTicket = async (signer, addr, tid, price, callbacks = {}) 
   }
 };
 
-export const createEvent = async (factory, { name, date, price, max }, callbacks = {}) => {
+export const createEvent = async (factory, eventData, callbacks = {}) => {
   const { onStatus, onSuccess } = callbacks;
   try {
+    const { name, description, date, price, max, bannerImage, cardImage, category } = eventData;
+    
+    // Check if we have images to upload
+    if (bannerImage || cardImage) {
+      if (onStatus) onStatus("Uploading images to IPFS...", "info");
+      
+      let bannerImageURI = null;
+      let cardImageURI = null;
+      
+      if (bannerImage) {
+        bannerImageURI = await uploadFileToPinata(bannerImage);
+      }
+      
+      if (cardImage) {
+        cardImageURI = await uploadFileToPinata(cardImage);
+      }
+      
+      // Create and upload metadata if we have additional fields
+      if (description || category || bannerImageURI || cardImageURI) {
+        if (onStatus) onStatus("Creating event metadata...", "info");
+        
+        const metadata = {
+          description: description || "",
+          category: category || "Other",
+          bannerImage: bannerImageURI,
+          cardImage: cardImageURI,
+          attributes: [
+            { trait_type: "Event Date", value: new Date(date * 1000).toISOString() },
+            { trait_type: "Ticket Price", value: price },
+            { trait_type: "Max Supply", value: max },
+            { trait_type: "Category", value: category || "Other" }
+          ]
+        };
+        
+        const metadataURI = await uploadJSONToPinata(metadata);
+        
+        if (onStatus) onStatus("Creating event with metadata...", "info");
+        // Call contract with metadata URI
+        const tx = await factory.createEvent(
+          name,
+          Math.floor(date),
+          ethers.parseEther(price),
+          parseInt(max, 10),
+          metadataURI
+        );
+        
+        if (onStatus) onStatus("Transaction submitted. Waiting for confirmation...", "info");
+        await tx.wait();
+        if (onStatus) onStatus("Event created successfully with metadata!", "success");
+        if (onSuccess) onSuccess();
+        return;
+      }
+    }
+    
+    // If we don't have images or additional data, use the original function
     if (onStatus) onStatus("Creating event...", "info");
     const tx = await factory.createEvent(
       name,

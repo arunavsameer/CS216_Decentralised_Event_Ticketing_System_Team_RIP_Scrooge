@@ -7,15 +7,16 @@ import ExpandedEventView from "./components/ExpandedEventView";
 import ExpandedTicketView from "./components/ExpandedTicketView";
 import MarketplaceSection from "./components/MarketplaceSection";
 import MyTicketsSection from "./components/MyTicketsSection";
+import MyOrganizedEvents from "./components/MyOrganizedEvents";
 import FactoryJSON from "./abis/EventFactory.json";
 import EventJSON from "./abis/Event.json";
-import { 
-  buyTicket, 
-  transferTicket, 
-  listTicket, 
-  cancelListing, 
-  buyListedTicket, 
-  createEvent 
+import {
+  buyTicket,
+  transferTicket,
+  listTicket,
+  cancelListing,
+  buyListedTicket,
+  createEvent
 } from "./utils/TicketUtils";
 import "./App.css";
 
@@ -30,11 +31,49 @@ function App() {
   const [expandedEvent, setExpandedEvent] = useState(null);
   const [expandedTicket, setExpandedTicket] = useState(null);
   const [previousTab, setPreviousTab] = useState(null);
+  const [eventMetadataCache, setEventMetadataCache] = useState({});
 
   const handleDisconnect = () => {
     setActiveTab("events");
     setExpandedEvent(null);
     setExpandedTicket(null);
+  };
+
+  // Fetch IPFS metadata
+  const fetchIPFSMetadata = async (uri) => {
+    // If we already have this metadata cached, return it
+    if (eventMetadataCache[uri]) {
+      return eventMetadataCache[uri];
+    }
+    
+    try {
+      // Convert IPFS URI to HTTP gateway URL
+      const url = uri.replace('ipfs://', 'https://ipfs.io/ipfs/');
+      const response = await fetch(url);
+      const metadata = await response.json();
+      
+      // Cache the result
+      setEventMetadataCache(prev => ({ ...prev, [uri]: metadata }));
+      
+      return metadata;
+    } catch (error) {
+      console.error("Error fetching metadata:", error);
+      return { 
+        description: "Failed to fetch description", 
+        bannerImage: null, 
+        cardImage: null,
+        category: "Other"
+      };
+    }
+  };
+
+  // Process image URLs
+  const processImageURL = (imageURL) => {
+    if (!imageURL) return null;
+    if (imageURL.startsWith("ipfs://")) {
+      return imageURL.replace("ipfs://", "https://ipfs.io/ipfs/");
+    }
+    return imageURL;
   };
 
   // Load all event data
@@ -54,6 +93,7 @@ function App() {
             maxSupply,
             sold,
             myTicketsRaw,
+            metadataURI,
           ] = await Promise.all([
             ev.eventName(),
             ev.eventDate(),
@@ -61,7 +101,16 @@ function App() {
             ev.maxSupply(),
             ev.sold(),
             ev.getMyTickets(),
+            ev.eventMetadataURI(),
           ]);
+          
+          // Fetch metadata from IPFS
+          const metadata = await fetchIPFSMetadata(metadataURI);
+          
+          // Process image URLs
+          const bannerImageURL = processImageURL(metadata.bannerImage);
+          const cardImageURL = processImageURL(metadata.cardImage);
+          
           const myTickets = myTicketsRaw.map((t) => Number(t));
           const myListings = await Promise.all(
             myTickets.map(async (tid) => {
@@ -99,6 +148,11 @@ function App() {
             myTickets,
             myListings,
             marketplaceListings,
+            description: metadata.description || "",
+            bannerImage: bannerImageURL,
+            cardImage: cardImageURL,
+            category: metadata.category || "Other",
+            metadataURI
           };
         })
       );
@@ -109,7 +163,7 @@ function App() {
       setStatus("Failed to load events: " + err.message);
       setStatusType("error");
     }
-  }, [factory, signer]);
+  }, [factory, signer, eventMetadataCache]);
 
   useEffect(() => {
     if (factory && signer) {
@@ -124,7 +178,7 @@ function App() {
     // Use history API to enable back button functionality
     window.history.pushState({ type: 'event', id: eventAddress }, '', `#event/${eventAddress}`);
   };
-  
+
   // Handle expanding a ticket
   const handleExpandTicket = (eventAddress, ticketId) => {
     setPreviousTab(activeTab);
@@ -133,7 +187,7 @@ function App() {
     // Use history API to enable back button functionality
     window.history.pushState({ type: 'ticket', eventId: eventAddress, ticketId }, '', `#ticket/${eventAddress}/${ticketId}`);
   };
-  
+
   // Handle back button
   const handleBack = () => {
     if (expandedTicket) {
@@ -191,7 +245,7 @@ function App() {
         setExpandedTicket(null);
         return;
       }
-      
+
       if (event.state.type === 'event') {
         setExpandedTicket(null);
         setExpandedEvent(eventDetails.find(e => e.address === event.state.id));
@@ -200,7 +254,7 @@ function App() {
         setExpandedTicket({ event, ticketId: event.state.ticketId });
       }
     };
-    
+
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [eventDetails]);
@@ -241,7 +295,7 @@ function App() {
 
   // Count all my tickets across all events
   const totalMyTickets = eventDetails.reduce((sum, event) => sum + event.myTickets.length, 0);
-  
+
   // Count all marketplace listings
   const totalMarketListings = eventDetails.reduce(
     (sum, event) => sum + event.marketplaceListings.length, 0
@@ -251,8 +305,8 @@ function App() {
   const renderMainContent = () => {
     if (expandedTicket) {
       return (
-        <ExpandedTicketView 
-          event={expandedTicket.event} 
+        <ExpandedTicketView
+          event={expandedTicket.event}
           ticketId={expandedTicket.ticketId}
           onBack={handleBack}
           onTransfer={(to) => handleTransferTicket(expandedTicket.event.address, expandedTicket.ticketId, to)}
@@ -263,10 +317,10 @@ function App() {
         />
       );
     }
-    
+
     if (expandedEvent) {
       return (
-        <ExpandedEventView 
+        <ExpandedEventView
           event={expandedEvent}
           onBack={handleBack}
           onBuyTicket={() => handleBuyTicket(expandedEvent.address, expandedEvent.price)}
@@ -279,7 +333,7 @@ function App() {
         />
       );
     }
-    
+
     // Regular tab content
     switch (activeTab) {
       case "events":
@@ -325,6 +379,20 @@ function App() {
         );
       case "createEvent":
         return <CreateEventForm onCreate={handleCreateEvent} />;
+      case "myOrganizedEvents":
+        return (
+          <MyOrganizedEvents
+            signer={signer}
+            factory={factory}
+            currentAddress={userAddress}
+            events={eventDetails}
+            onStatusUpdate={(message, type) => {
+              setStatus(message);
+              setStatusType(type);
+            }}
+            onExpandEvent={handleExpandEvent}
+          />
+        );
       default:
         return null;
     }
@@ -337,7 +405,7 @@ function App() {
           <h1 className="app-title">
             <span>NFTickets</span>
           </h1>
-          <ConnectWalletButton 
+          <ConnectWalletButton
             onConnect={() => loadEventDetails()} // Load events after connection
             onDisconnect={handleDisconnect}
             setStatus={setStatus}
@@ -383,6 +451,12 @@ function App() {
                 onClick={() => handleTabChange("createEvent")}
               >
                 Create Event
+              </li>
+              <li
+                className={`nav-item ${activeTab === "myOrganizedEvents" ? "active" : ""}`}
+                onClick={() => handleTabChange("myOrganizedEvents")}
+              >
+                My Organized Events
               </li>
             </ul>
           </nav>

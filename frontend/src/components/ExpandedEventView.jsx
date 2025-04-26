@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import './ExpandedEventView.css';
 import TicketModal from './TicketModal';
 
@@ -20,6 +20,38 @@ export default function ExpandedEventView({
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
+  
+  // Image loading states
+  const [bannerLoaded, setBannerLoaded] = useState(false);
+  const [bannerError, setBannerError] = useState(false);
+  
+  // Extract banner image URL based on the event structure
+  const bannerImageUrl = event.metadata?.bannerImage || event.bannerImage || "";
+  
+  // Preload banner image
+  useEffect(() => {
+    // Reset states when image URL changes
+    setBannerLoaded(false);
+    setBannerError(false);
+    
+    // Preload the image to check if it can be loaded
+    if (bannerImageUrl) {
+      const img = new Image();
+      img.onload = () => setBannerLoaded(true);
+      img.onerror = () => setBannerError(true);
+      img.src = bannerImageUrl;
+    }
+  }, [bannerImageUrl]);
+  
+  // Apply banner image style
+  const bannerStyle = bannerImageUrl && bannerLoaded && !bannerError 
+    ? { 
+        backgroundImage: `url(${bannerImageUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }
+    : {}; // Empty object will use default styling from CSS
   
   // Handle opening the ticket modal
   const handleTicketClick = (ticketId) => {
@@ -56,7 +88,7 @@ export default function ExpandedEventView({
       </div>
       
       <div className="event-hero">
-        <div className="event-banner"></div>
+        <div className="event-banner" style={bannerStyle}></div>
         <h1 className="event-title">{event.name}</h1>
       </div>
       

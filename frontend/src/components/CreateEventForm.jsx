@@ -3,20 +3,49 @@ import React, { useState } from "react";
 import './CreateEventForm.css';
 
 export default function CreateEventForm({ onCreate }) {
-  const [form, setForm] = useState({ name: "", date: "", price: "", max: "" });
+  const [form, setForm] = useState({ 
+    name: "", 
+    description: "", 
+    date: "", 
+    price: "", 
+    max: "",
+    bannerImage: null,
+    cardImage: null,
+    category: "Music" // Default category
+  });
+
+  // Event categories
+  const categories = [
+    "Music", 
+    "Conference", 
+    "Workshop", 
+    "Sports", 
+    "Arts", 
+    "Festival", 
+    "Networking", 
+    "Other"
+  ];
 
   const handleChange = e => {
-    const { id, value } = e.target;
-    setForm(f => ({ ...f, [id]: value }));
+    const { id, value, files } = e.target;
+    if (id === "bannerImage" || id === "cardImage") {
+      setForm(f => ({ ...f, [id]: files[0] }));
+    } else {
+      setForm(f => ({ ...f, [id]: value }));
+    }
   };
 
   const handleSubmit = e => {
     e.preventDefault();
     onCreate({
       name: form.name,
+      description: form.description,
       date: new Date(form.date).getTime() / 1000,
       price: form.price,
-      max: form.max
+      max: form.max,
+      bannerImage: form.bannerImage,
+      cardImage: form.cardImage,
+      category: form.category
     });
   };
 
@@ -35,6 +64,34 @@ export default function CreateEventForm({ onCreate }) {
             placeholder="Concert, Conference, etc."
             required 
           />
+        </div>
+
+        <div className="form-group" style={{ gridColumn: '1/-1' }}>
+          <label className="form-label" htmlFor="description">Description</label>
+          <textarea 
+            className="form-input"
+            id="description" 
+            value={form.description} 
+            onChange={handleChange} 
+            placeholder="Provide details about your event"
+            rows="4"
+            required 
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label" htmlFor="category">Category</label>
+          <select 
+            className="form-input"
+            id="category" 
+            value={form.category} 
+            onChange={handleChange}
+            required
+          >
+            {categories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
         </div>
 
         <div className="form-group">
@@ -73,6 +130,30 @@ export default function CreateEventForm({ onCreate }) {
             value={form.max} 
             onChange={handleChange}
             placeholder="100" 
+            required 
+          />
+        </div>
+        
+        <div className="form-group">
+          <label className="form-label" htmlFor="bannerImage">Banner Image</label>
+          <input 
+            className="form-input"
+            id="bannerImage" 
+            type="file" 
+            accept="image/*" 
+            onChange={handleChange}
+            required 
+          />
+        </div>
+        
+        <div className="form-group">
+          <label className="form-label" htmlFor="cardImage">Card Image</label>
+          <input 
+            className="form-input"
+            id="cardImage" 
+            type="file" 
+            accept="image/*" 
+            onChange={handleChange}
             required 
           />
         </div>

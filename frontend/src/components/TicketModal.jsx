@@ -15,6 +15,13 @@ export default function TicketModal({
   const [listingPrice, setListingPrice] = useState("");
   const [listingExpiry, setListingExpiry] = useState("24"); // Default 24 hours
   const [activeTab, setActiveTab] = useState("details");
+  
+  // Image loading states
+  const [bannerLoaded, setBannerLoaded] = useState(false);
+  const [bannerError, setBannerError] = useState(false);
+  
+  // Extract banner image URL based on the event structure
+  const bannerImageUrl = event?.metadata?.bannerImage || event?.bannerImage || event?.metadata?.cardImage || event?.cardImage || "";
 
   // Find if this ticket is listed
   const myTickets = event?.myTickets || [];
@@ -29,8 +36,41 @@ export default function TicketModal({
       setRecipient("");
       setListingPrice("");
       setListingExpiry("24");
+      
+      // Reset image states
+      setBannerLoaded(false);
+      setBannerError(false);
+      
+      // Preload banner image
+      if (bannerImageUrl) {
+        const img = new Image();
+        img.onload = () => setBannerLoaded(true);
+        img.onerror = () => setBannerError(true);
+        img.src = bannerImageUrl;
+      }
+      
+      // Prevent body scrolling when modal is open
+      document.body.classList.add('body-modal-open');
+    } else {
+      // Re-enable body scrolling when modal closes
+      document.body.classList.remove('body-modal-open');
     }
-  }, [isOpen]);
+    
+    // Cleanup function to ensure body scrolling is re-enabled
+    return () => {
+      document.body.classList.remove('body-modal-open');
+    };
+  }, [isOpen, bannerImageUrl]);
+  
+  // Apply banner image style
+  const bannerStyle = bannerImageUrl && bannerLoaded && !bannerError 
+    ? { 
+        backgroundImage: `url(${bannerImageUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }
+    : {}; // Empty object will use default styling from CSS
 
   const handleTransfer = () => {
     if (!recipient) return;
@@ -53,7 +93,12 @@ export default function TicketModal({
   if (!isOpen || !event) return null;
 
   return (
-    <div className="ticket-modal-overlay">
+    <div className="ticket-modal-overlay" onClick={(e) => {
+      // Close modal when clicking on overlay background
+      if (e.target.className === 'ticket-modal-overlay') {
+        onClose();
+      }
+    }}>
       <div className="ticket-modal">
         <div className="modal-header">
           <h2 className="modal-title">Ticket #{ticketId}</h2>
@@ -85,7 +130,7 @@ export default function TicketModal({
 
           {activeTab === 'details' && (
             <div className="ticket-details-tab">
-              <div className="event-banner-small"></div>
+              <div className="event-banner-small" style={bannerStyle}></div>
               <div className="ticket-info-grid">
                 <div className="info-item">
                   <h3>Event</h3>
