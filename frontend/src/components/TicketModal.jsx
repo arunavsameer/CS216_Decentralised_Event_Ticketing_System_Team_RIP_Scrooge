@@ -50,15 +50,15 @@ export default function TicketModal({
       }
       
       // Prevent body scrolling when modal is open
-      document.body.classList.add('body-modal-open');
+      document.body.classList.add('tkmodal-body-lock');
     } else {
       // Re-enable body scrolling when modal closes
-      document.body.classList.remove('body-modal-open');
+      document.body.classList.remove('tkmodal-body-lock');
     }
     
     // Cleanup function to ensure body scrolling is re-enabled
     return () => {
-      document.body.classList.remove('body-modal-open');
+      document.body.classList.remove('tkmodal-body-lock');
     };
   }, [isOpen, bannerImageUrl]);
   
@@ -93,16 +93,16 @@ export default function TicketModal({
   if (!isOpen || !event) return null;
 
   return (
-    <div className="ticket-modal-overlay" onClick={(e) => {
+    <div className="tkmodal-overlay" onClick={(e) => {
       // Close modal when clicking on overlay background
-      if (e.target.className === 'ticket-modal-overlay') {
+      if (e.target.className === 'tkmodal-overlay') {
         onClose();
       }
     }}>
-      <div className="ticket-modal">
-        <div className="modal-header">
-          <h2 className="modal-title">Ticket #{ticketId}</h2>
-          <button className="close-button" onClick={onClose}>
+      <div className="tkmodal-container">
+        <div className="tkmodal-header">
+          <h2 className="tkmodal-title">Ticket #{ticketId}</h2>
+          <button className="tkmodal-close-btn" onClick={onClose}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -110,17 +110,17 @@ export default function TicketModal({
           </button>
         </div>
         
-        <div className="modal-content">
-          <div className="ticket-tabs">
+        <div className="tkmodal-content">
+          <div className="tkmodal-tabs">
             <button
-              className={`tab-btn ${activeTab === 'details' ? 'active' : ''}`}
+              className={`tkmodal-tab-btn ${activeTab === 'details' ? 'tkmodal-tab-btn--active' : ''}`}
               onClick={() => setActiveTab('details')}
             >
               Details
             </button>
             {isMyTicket && (
               <button
-                className={`tab-btn ${activeTab === 'manage' ? 'active' : ''}`}
+                className={`tkmodal-tab-btn ${activeTab === 'manage' ? 'tkmodal-tab-btn--active' : ''}`}
                 onClick={() => setActiveTab('manage')}
               >
                 Manage
@@ -129,28 +129,28 @@ export default function TicketModal({
           </div>
 
           {activeTab === 'details' && (
-            <div className="ticket-details-tab">
-              <div className="event-banner-small" style={bannerStyle}></div>
-              <div className="ticket-info-grid">
-                <div className="info-item">
+            <div className="tkmodal-details-pane">
+              <div className="tkmodal-event-banner" style={bannerStyle}></div>
+              <div className="tkmodal-info-grid">
+                <div className="tkmodal-info-item">
                   <h3>Event</h3>
                   <p>{event.name}</p>
                 </div>
-                <div className="info-item">
+                <div className="tkmodal-info-item">
                   <h3>Date & Time</h3>
                   <p>{event.date}</p>
                 </div>
-                <div className="info-item">
+                <div className="tkmodal-info-item">
                   <h3>Ticket ID</h3>
                   <p>#{ticketId}</p>
                 </div>
                 {isListed && (
                   <>
-                    <div className="info-item">
+                    <div className="tkmodal-info-item">
                       <h3>Listed Price</h3>
-                      <p className="price-value">{listing.price} ETH</p>
+                      <p className="tkmodal-price">{listing.price} ETH</p>
                     </div>
-                    <div className="info-item">
+                    <div className="tkmodal-info-item">
                       <h3>Listing Expires</h3>
                       <p>{listing.expiresAt}</p>
                     </div>
@@ -161,24 +161,24 @@ export default function TicketModal({
           )}
 
           {activeTab === 'manage' && isMyTicket && (
-            <div className="ticket-manage-tab">
+            <div className="tkmodal-manage-pane">
               {isListed ? (
-                <div className="manage-section">
+                <div className="tkmodal-section">
                   <h3>Active Listing</h3>
-                  <div className="listing-info">
+                  <div className="tkmodal-listing-info">
                     <p>Your ticket is currently listed for {listing.price} ETH</p>
                     <p>Listing expires: {listing.expiresAt}</p>
                   </div>
-                  <button className="action-button danger" onClick={handleCancelListing}>
+                  <button className="tkmodal-btn tkmodal-btn--danger" onClick={handleCancelListing}>
                     Cancel Listing
                   </button>
                 </div>
               ) : (
                 <>
-                  <div className="manage-section">
+                  <div className="tkmodal-section">
                     <h3>List on Marketplace</h3>
-                    <div className="form-container">
-                      <div className="form-group">
+                    <div className="tkmodal-form">
+                      <div className="tkmodal-form-group">
                         <label>Price (ETH)</label>
                         <input
                           type="number"
@@ -186,40 +186,40 @@ export default function TicketModal({
                           placeholder="0.1"
                           value={listingPrice}
                           onChange={(e) => setListingPrice(e.target.value)}
-                          className="modern-input"
+                          className="tkmodal-input"
                         />
                       </div>
-                      <div className="form-group">
+                      <div className="tkmodal-form-group">
                         <label>Listing Duration (hours)</label>
                         <input
                           type="number"
                           placeholder="24"
                           value={listingExpiry}
                           onChange={(e) => setListingExpiry(e.target.value)}
-                          className="modern-input"
+                          className="tkmodal-input"
                         />
                       </div>
-                      <button className="action-button primary" onClick={handleListing}>
+                      <button className="tkmodal-btn tkmodal-btn--primary" onClick={handleListing}>
                         List Ticket
                       </button>
                     </div>
                   </div>
 
-                  <div className="divider"></div>
+                  <div className="tkmodal-divider"></div>
 
-                  <div className="manage-section">
+                  <div className="tkmodal-section">
                     <h3>Transfer Ticket</h3>
-                    <div className="form-group">
+                    <div className="tkmodal-form-group">
                       <label>Recipient Address</label>
                       <input
                         type="text"
                         placeholder="0x..."
                         value={recipient}
                         onChange={(e) => setRecipient(e.target.value)}
-                        className="modern-input"
+                        className="tkmodal-input"
                       />
                     </div>
-                    <button className="action-button secondary" onClick={handleTransfer}>
+                    <button className="tkmodal-btn tkmodal-btn--secondary" onClick={handleTransfer}>
                       Transfer Ticket
                     </button>
                   </div>

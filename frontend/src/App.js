@@ -32,6 +32,8 @@ function App() {
   const [expandedTicket, setExpandedTicket] = useState(null);
   const [previousTab, setPreviousTab] = useState(null);
   const [eventMetadataCache, setEventMetadataCache] = useState({});
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleDisconnect = () => {
     setActiveTab("events");
@@ -39,34 +41,47 @@ function App() {
     setExpandedTicket(null);
   };
 
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    // Reset category to "All" when searching to show all matching results
+    if (e.target.value.trim() !== "") {
+      setActiveCategory("All");
+    }
+  };
+
+
+
   // Fetch IPFS metadata
   const fetchIPFSMetadata = async (uri) => {
     // If we already have this metadata cached, return it
     if (eventMetadataCache[uri]) {
       return eventMetadataCache[uri];
     }
-    
+
     try {
       // Convert IPFS URI to HTTP gateway URL
       const url = uri.replace('ipfs://', 'https://ipfs.io/ipfs/');
       const response = await fetch(url);
       const metadata = await response.json();
-      
+
       // Cache the result
       setEventMetadataCache(prev => ({ ...prev, [uri]: metadata }));
-      
+
       return metadata;
     } catch (error) {
       console.error("Error fetching metadata:", error);
-      return { 
-        description: "Failed to fetch description", 
-        bannerImage: null, 
+      return {
+        description: "Failed to fetch description",
+        bannerImage: null,
         cardImage: null,
         category: "Other"
       };
     }
   };
-
+  const isEventExpired = (eventDate) => {
+    const now = Math.floor(Date.now() / 1000); // Current time in seconds
+    return eventDate < now;
+  };
   // Process image URLs
   const processImageURL = (imageURL) => {
     if (!imageURL) return null;
@@ -75,6 +90,35 @@ function App() {
     }
     return imageURL;
   };
+
+  const getUniqueCategories = () => {
+    const categories = eventDetails
+      .filter(event => !isEventExpired(event.rawDate))
+      .map(event => event.category);
+    const uniqueCategories = [...new Set(categories)];
+    return ["All", ...uniqueCategories.sort()];
+  };
+
+  const filteredEvents = eventDetails
+    .filter(event => !isEventExpired(event.rawDate)) // Only upcoming events
+    .filter(event => activeCategory === "All" || event.category === activeCategory)
+    .filter(event =>
+      searchQuery.trim() === "" ||
+      event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.category.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+  // Get all expired events
+  const expiredEvents = eventDetails.filter(event => isEventExpired(event.rawDate));
+
+
+  const handleCategoryChange = (category) => {
+    setActiveCategory(category);
+  };
+
+
+
+
 
   // Load all event data
   const loadEventDetails = useCallback(async () => {
@@ -103,14 +147,14 @@ function App() {
             ev.getMyTickets(),
             ev.eventMetadataURI(),
           ]);
-          
+
           // Fetch metadata from IPFS
           const metadata = await fetchIPFSMetadata(metadataURI);
-          
+
           // Process image URLs
           const bannerImageURL = processImageURL(metadata.bannerImage);
           const cardImageURL = processImageURL(metadata.cardImage);
-          
+
           const myTickets = myTicketsRaw.map((t) => Number(t));
           const myListings = await Promise.all(
             myTickets.map(async (tid) => {
@@ -340,17 +384,79 @@ function App() {
         return (
           <div className="events-section">
             <h2 className="section-title">Upcoming Events</h2>
-            <div className="events-grid">
-              {eventDetails.map((event) => (
-                <EventCard
-                  key={event.address}
-                  event={event}
-                  currentAddress={userAddress}
-                  onBuyTicket={() => handleBuyTicket(event.address, event.price)}
-                  onExpand={() => handleExpandEvent(event.address)}
-                  signer={signer}
-                />
+
+            {/* Category Filter Buttons */}
+            <div className="category-filter">
+              {getUniqueCategories().map(category => (
+                <button
+                  key={category}
+                  className={`category-btn ${activeCategory === category ? 'active' : ''}`}
+                  onClick={() => handleCategoryChange(category)}
+                >
+                  {category}
+                </button>
               ))}
+            </div>
+            <div className="search-bar-container">
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Search events by name or category..."
+                value={searchQuery}
+                onChange={handleSearch}
+              />
+              {searchQuery && (
+                <button
+                  className="search-clear-button"
+                  onClick={() => setSearchQuery("")}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
+            <div className="events-grid">
+              {filteredEvents.length > 0 ? (
+                filteredEvents.map((event) => (
+                  <EventCard
+                    key={event.address}
+                    event={event}
+                    currentAddress={userAddress}
+                    onBuyTicket={() => handleBuyTicket(event.address, event.price)}
+                    onExpand={() => handleExpandEvent(event.address)}
+                    signer={signer}
+                  />
+                ))
+              ) : (
+                <div className="empty-events-message">
+                  No upcoming events found for this category.
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      case "expiredEvents":
+        return (
+          <div className="events-section">
+            <h2 className="section-title">Past Events</h2>
+
+            <div className="events-grid">
+              {expiredEvents.length > 0 ? (
+                expiredEvents.map((event) => (
+                  <EventCard
+                    key={event.address}
+                    event={event}
+                    currentAddress={userAddress}
+                    expired={true}
+                    onExpand={() => handleExpandEvent(event.address)}
+                    signer={signer}
+                  />
+                ))
+              ) : (
+                <div className="empty-events-message">
+                  No past events found.
+                </div>
+              )}
             </div>
           </div>
         );

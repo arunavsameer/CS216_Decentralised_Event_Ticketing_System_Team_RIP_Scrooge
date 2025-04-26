@@ -268,3 +268,101 @@ iframe {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border: 1px solid var(--border-color);
 }
+
+/* Add to your App.css file */
+
+.category-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.category-btn {
+  background-color: var(--dark);
+  color: var(--light);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-btn:hover {
+  background-color: var(--card-bg);
+  transform: translateY(-2px);
+}
+
+.category-btn.active {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+
+/* Add this to your App.css file */
+
+.search-bar-container {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--light);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.search-input::placeholder {
+  color: var(--gray);
+}
+
+.search-clear-button {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--gray);
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.search-clear-button:hover {
+  color: var(--light);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Update the empty state message */
+.empty-events-message {
+  grid-column: 1 / -1;
+  padding: 3rem;
+  text-align: center;
+  background-color: var(--dark);
+  border-radius: 16px;
+  border: 1px dashed var(--border-color);
+  color: var(--gray);
+  font-size: 1.1rem;
+}

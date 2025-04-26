@@ -23,6 +23,9 @@ export default function CreateEventForm({ onCreate }) {
     "Arts", 
     "Festival", 
     "Networking", 
+    "Food",
+    "Charity",
+    "Theater",
     "Other"
   ];
 
