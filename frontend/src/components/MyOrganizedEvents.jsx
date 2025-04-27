@@ -16,6 +16,7 @@ function MyOrganizedEvents({
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [ticketOwners, setTicketOwners] = useState([]);
   const [loadingOwners, setLoadingOwners] = useState(false);
+  const [copiedAddress, setCopiedAddress] = useState(null);
 
   useEffect(() => {
     if (!factory || !signer || !events.length || !currentAddress) return;
@@ -95,6 +96,7 @@ function MyOrganizedEvents({
   const closeTicketOwnersModal = () => {
     setSelectedEvent(null);
     setTicketOwners([]);
+    setCopiedAddress(null); // Reset copied address state
   };
 
   // Function to shorten Ethereum address for display
@@ -105,6 +107,24 @@ function MyOrganizedEvents({
   // Function to format ticket ID with leading zeros
   const formatTicketId = (id) => {
     return id.toString().padStart(3, '0');
+  };
+
+  // Function to copy address to clipboard
+  const copyAddressToClipboard = (address) => {
+    navigator.clipboard.writeText(address)
+      .then(() => {
+        setCopiedAddress(address);
+        // Reset the copied state after 2 seconds
+        setTimeout(() => {
+          setCopiedAddress(null);
+        }, 2000);
+      })
+      .catch(err => {
+        console.error("Could not copy address: ", err);
+        if (onStatusUpdate) {
+          onStatusUpdate("Failed to copy address to clipboard", "error");
+        }
+      });
   };
 
   if (loading) {
@@ -189,9 +209,18 @@ function MyOrganizedEvents({
                         <div key={item.ticketId} className="ticket-owner-item">
                           <div className="ticket-id">Ticket #{formatTicketId(item.ticketId)}</div>
                           <div className="ticket-owner">
-                            <span className="owner-address" title={item.owner}>
-                              {shortenAddress(item.owner)}
-                            </span>
+                            <div className="owner-address-container">
+                              <span className="owner-address" title={item.owner}>
+                                {shortenAddress(item.owner)}
+                              </span>
+                              <button 
+                                className={`copy-address-btn ${copiedAddress === item.owner ? 'copied' : ''}`}
+                                onClick={() => copyAddressToClipboard(item.owner)}
+                                title="Copy address to clipboard"
+                              >
+                                {copiedAddress === item.owner ? "Copied!" : "Copy"}
+                              </button>
+                            </div>
                             <a 
                               href={`https://etherscan.io/address/${item.owner}`} 
                               target="_blank" 

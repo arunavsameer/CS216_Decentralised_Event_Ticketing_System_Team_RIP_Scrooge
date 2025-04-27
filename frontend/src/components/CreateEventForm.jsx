@@ -13,6 +13,12 @@ export default function CreateEventForm({ onCreate }) {
     cardImage: null,
     category: "Music" // Default category
   });
+  
+  const [errors, setErrors] = useState({
+    date: "",
+    bannerImage: "",
+    cardImage: ""
+  });
 
   // Event categories
   const categories = [
@@ -29,26 +35,98 @@ export default function CreateEventForm({ onCreate }) {
     "Other"
   ];
 
+  const validateImageSize = (file) => {
+    if (!file) return true;
+    
+    // Check if file size is less than 5MB (5 * 1024 * 1024 bytes)
+    const maxSize = 5 * 1024 * 1024;
+    return file.size <= maxSize;
+  };
+
+  const validateDate = (dateString) => {
+    if (!dateString) return false;
+    
+    const selectedDate = new Date(dateString);
+    const currentDate = new Date();
+    
+    // Check if selected date is in the future
+    return selectedDate > currentDate;
+  };
+
   const handleChange = e => {
     const { id, value, files } = e.target;
+    
     if (id === "bannerImage" || id === "cardImage") {
-      setForm(f => ({ ...f, [id]: files[0] }));
+      // Reset error for this field
+      setErrors(prev => ({ ...prev, [id]: "" }));
+      
+      // If file is selected, validate its size
+      if (files.length > 0) {
+        const file = files[0];
+        if (!validateImageSize(file)) {
+          setErrors(prev => ({ ...prev, [id]: "Image must be less than 5MB" }));
+          return;
+        }
+        setForm(f => ({ ...f, [id]: file }));
+      } else {
+        setForm(f => ({ ...f, [id]: null }));
+      }
+    } else if (id === "date") {
+      setErrors(prev => ({ ...prev, date: "" }));
+      if (!validateDate(value)) {
+        setErrors(prev => ({ ...prev, date: "Event date must be in the future" }));
+      }
+      setForm(f => ({ ...f, [id]: value }));
     } else {
       setForm(f => ({ ...f, [id]: value }));
     }
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate date
+    if (!validateDate(form.date)) {
+      setErrors(prev => ({ ...prev, date: "Event date must be in the future" }));
+      return;
+    }
+    
+    // Final validation check before submission
+    const bannerImageValid = validateImageSize(form.bannerImage);
+    const cardImageValid = validateImageSize(form.cardImage);
+    
+    if (!bannerImageValid || !cardImageValid) {
+      setErrors(prev => ({
+        ...prev,
+        bannerImage: !bannerImageValid ? "Banner image must be less than 5MB" : "",
+        cardImage: !cardImageValid ? "Card image must be less than 5MB" : ""
+      }));
+      return;
+    }
+    
+    // Create a copy of the form data to modify
+    const formData = { ...form };
+    
+    // If no banner image is selected, use the default banner
+    if (!formData.bannerImage) {
+      try {
+        const response = await fetch('/high_res_banner.jpg');
+        const blob = await response.blob();
+        formData.bannerImage = new File([blob], 'high_res_banner.jpg', { type: 'image/jpeg' });
+      } catch (error) {
+        console.error("Error loading default banner image:", error);
+      }
+    }
+    
     onCreate({
-      name: form.name,
-      description: form.description,
-      date: new Date(form.date).getTime() / 1000,
-      price: form.price,
-      max: form.max,
-      bannerImage: form.bannerImage,
-      cardImage: form.cardImage,
-      category: form.category
+      name: formData.name,
+      description: formData.description,
+      date: new Date(formData.date).getTime() / 1000,
+      price: formData.price,
+      max: formData.max,
+      bannerImage: formData.bannerImage,
+      cardImage: formData.cardImage,
+      category: formData.category
     });
   };
 
@@ -100,13 +178,14 @@ export default function CreateEventForm({ onCreate }) {
         <div className="form-group">
           <label className="form-label" htmlFor="date">Date & Time</label>
           <input 
-            className="form-input"
+            className={`form-input ${errors.date ? 'input-error' : ''}`}
             id="date" 
             type="datetime-local" 
             value={form.date} 
             onChange={handleChange} 
             required 
           />
+          {errors.date && <p className="error-message">{errors.date}</p>}
         </div>
 
         <div className="form-group">
@@ -138,27 +217,27 @@ export default function CreateEventForm({ onCreate }) {
         </div>
         
         <div className="form-group">
-          <label className="form-label" htmlFor="bannerImage">Banner Image</label>
+          <label className="form-label" htmlFor="bannerImage">Banner Image (optional, default will be used if not provided)</label>
           <input 
-            className="form-input"
+            className={`form-input ${errors.bannerImage ? 'input-error' : ''}`}
             id="bannerImage" 
             type="file" 
             accept="image/*" 
             onChange={handleChange}
-            required 
           />
+          {errors.bannerImage && <p className="error-message">{errors.bannerImage}</p>}
         </div>
         
         <div className="form-group">
-          <label className="form-label" htmlFor="cardImage">Card Image</label>
+          <label className="form-label" htmlFor="cardImage">Card Image (optional, max 5MB)</label>
           <input 
-            className="form-input"
+            className={`form-input ${errors.cardImage ? 'input-error' : ''}`}
             id="cardImage" 
             type="file" 
             accept="image/*" 
             onChange={handleChange}
-            required 
           />
+          {errors.cardImage && <p className="error-message">{errors.cardImage}</p>}
         </div>
         
         <div className="form-group" style={{ gridColumn: '1/-1' }}>

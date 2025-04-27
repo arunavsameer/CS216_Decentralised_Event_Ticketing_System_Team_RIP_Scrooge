@@ -511,18 +511,35 @@ function App() {
           <h1 className="app-title">
             <span>NFTickets</span>
           </h1>
-          <ConnectWalletButton
-            onConnect={() => loadEventDetails()} // Load events after connection
-            onDisconnect={handleDisconnect}
-            setStatus={setStatus}
-            setStatusType={setStatusType}
-            setSigner={setSigner}
-            setUserAddress={setUserAddress}
-            setFactory={setFactory}
-            userAddress={userAddress}
-            factoryAddress={process.env.REACT_APP_FACTORY_ADDRESS}
-            factoryABI={FactoryJSON.abi}
-          />
+          <div className="header-controls">
+            {userAddress && (
+              <button
+                className="refresh-button"
+                onClick={loadEventDetails}
+                title="Refresh data"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 4v6h-6"></path>
+                  <path d="M1 20v-6h6"></path>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+                  <path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+              </button>
+            )}
+            <ConnectWalletButton
+              onConnect={() => loadEventDetails()} // Load events after connection
+              onDisconnect={handleDisconnect}
+              setStatus={setStatus}
+              setStatusType={setStatusType}
+              setSigner={setSigner}
+              setUserAddress={setUserAddress}
+              setFactory={setFactory}
+              userAddress={userAddress}
+              factoryAddress={process.env.REACT_APP_FACTORY_ADDRESS}
+              factoryABI={FactoryJSON.abi}
+            />
+          </div>
         </header>
 
         {userAddress && (

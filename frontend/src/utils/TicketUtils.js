@@ -57,8 +57,18 @@ export const buyTicket = async (signer, addr, price, callbacks = {}) => {
 export const transferTicket = async (signer, addr, tid, to, callbacks = {}) => {
   const { onStatus, onSuccess } = callbacks;
   try {
-    if (onStatus) onStatus("Transferring ticket...", "info");
+    // Check if the event has expired
     const ev = new ethers.Contract(addr, EventJSON.abi, signer);
+    const eventDate = await ev.eventDate();
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    
+    // If the event date has passed, don't allow transfer
+    if (Number(eventDate) < currentTimestamp) {
+      if (onStatus) onStatus("Cannot transfer ticket: Event has already expired", "error");
+      return;
+    }
+    
+    if (onStatus) onStatus("Transferring ticket...", "info");
     const tx = await ev.transferTicket(to, tid);
     if (onStatus) onStatus("Transaction submitted. Waiting for confirmation...", "info");
     await tx.wait();
@@ -73,8 +83,25 @@ export const transferTicket = async (signer, addr, tid, to, callbacks = {}) => {
 export const listTicket = async (signer, addr, tid, price, expires, callbacks = {}) => {
   const { onStatus, onSuccess } = callbacks;
   try {
-    if (onStatus) onStatus("Approving ticket for listing...", "info");
+    // Check if the event has expired
     const ev = new ethers.Contract(addr, EventJSON.abi, signer);
+    const eventDate = await ev.eventDate();
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    
+    // If the event date has passed, don't allow listing
+    if (Number(eventDate) < currentTimestamp) {
+      if (onStatus) onStatus("Cannot list ticket: Event has already expired", "error");
+      return;
+    }
+    
+    // Additional validation - make sure expiration doesn't exceed event date
+    if (Number(expires) > Number(eventDate)) {
+      // Set the expires time to event date if user tried to set it beyond event date
+      expires = Number(eventDate);
+      if (onStatus) onStatus("Listing expiration adjusted to event date", "info");
+    }
+    
+    if (onStatus) onStatus("Approving ticket for listing...", "info");
     const approvalTx = await ev.approve(addr, tid);
     if (onStatus) onStatus("Approval submitted. Waiting for confirmation...", "info");
     await approvalTx.wait();

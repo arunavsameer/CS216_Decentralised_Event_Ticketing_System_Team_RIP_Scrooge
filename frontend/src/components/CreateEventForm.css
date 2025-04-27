@@ -61,3 +61,17 @@
     transform: translateY(-2px);
     box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4), 0 4px 6px -2px rgba(59, 130, 246, 0.3);
   }
+
+  /* Add this to CreateEventForm.css */
+
+.input-error {
+  border-color: var(--error) !important;
+  box-shadow: 0 0 0 1px var(--error) !important;
+}
+
+.error-message {
+  color: var(--error);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}

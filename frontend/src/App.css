@@ -366,3 +366,37 @@ iframe {
   color: var(--gray);
   font-size: 1.1rem;
 }
+
+
+/* Add to your App.css file */
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.refresh-button {
+  background-color: var(--dark);
+  color: var(--gray);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.refresh-button:hover {
+  background-color: var(--card-bg);
+  color: var(--primary);
+  transform: rotate(30deg);
+}
+
+.refresh-button:active {
+  transform: rotate(180deg);
+}
