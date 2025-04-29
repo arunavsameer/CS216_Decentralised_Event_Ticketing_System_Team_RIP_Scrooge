@@ -2,6 +2,17 @@
 
 NFTickets is a cutting-edge decentralized ticketing platform built on Ethereum. Using NFTs and smart contracts, it ensures a secure, transparent, and tamper-proof ticketing experience — eliminating fraud and third-party intermediaries.
 
+## 👨‍💻 Project Team
+
+Team Name: RIP_Scrooge
+
+| Name | Roll Number |
+|------|------------|
+| Arunav Sameer | 230001010 |
+| Anmol Joshi | 230001007 |
+| Arihant Jain | 230001009 |
+| Tanishq Godha | 230001074 |
+
 ## 🚀 Features
 
 ### 🧾 Event Creation & Management
