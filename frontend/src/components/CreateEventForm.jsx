@@ -32,6 +32,7 @@ export default function CreateEventForm({ onCreate }) {
     "Food",
     "Charity",
     "Theater",
+    "Travel",
     "Other"
   ];
 

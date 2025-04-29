@@ -28,6 +28,9 @@ export default function ExpandedEventView({
   // Extract banner image URL based on the event structure
   const bannerImageUrl = event.metadata?.bannerImage || event.bannerImage || "";
   
+  // Extract event description
+  const eventDescription = event.metadata?.description || event.description || "No description available.";
+  
   // Preload banner image
   useEffect(() => {
     // Reset states when image URL changes
@@ -115,6 +118,12 @@ export default function ExpandedEventView({
                   ></div>
                 </div>
               </div>
+            </div>
+            
+            {/* Event Description */}
+            <div className="event-description">
+              <h3>About This Event</h3>
+              <p>{eventDescription}</p>
             </div>
             
             {!isExpired && !isSoldOut && (
