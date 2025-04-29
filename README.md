@@ -12,6 +12,8 @@ Team Name: RIP_Scrooge
 | Anmol Joshi | 230001007 |
 | Arihant Jain | 230001009 |
 | Tanishq Godha | 230001074 |
+| Vedant Jain | 230008038 |
+| Abhitulya Mishra | 230002002 |
 
 ## 🚀 Features
 
