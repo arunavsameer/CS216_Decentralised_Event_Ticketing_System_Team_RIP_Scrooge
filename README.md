@@ -99,6 +99,7 @@ REACT_APP_FACTORY_ADDRESS=your_deployed_factory_address
 REACT_APP_PINATA_KEY=your_pinata_key
 REACT_APP_PINATA_SECRET=your_pinata_secret
 ```
+Add SEPOLIA_RPC_URL only if you want to deploy on Sepolia Testnet
 
 ## 🔗 Blockchain Development Workflow
 
@@ -121,7 +122,7 @@ npx hardhat run scripts/prev_script.js --network localhost
 npx hardhat run scripts/prev_script.js --network sepolia
 ```
 
--This will give you your Factory Address
+-This will give you your REACT_APP_FACTORY_ADDRESS
 
 After deployment, copy the contract address and paste it into your frontend .env.
 
