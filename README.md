@@ -110,7 +110,7 @@ npx hardhat run scripts/prev_script.js --network localhost
 npx hardhat run scripts/prev_script.js --network sepolia
 ```
 
--This will give you you Factory Address
+-This will give you your Factory Address
 
 After deployment, copy the contract address and paste it into your frontend .env.
 
