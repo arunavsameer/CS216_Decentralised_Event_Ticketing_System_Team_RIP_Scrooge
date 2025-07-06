@@ -19,13 +19,13 @@ Team Name: RIP_Scrooge
 
 ### 🧾 Event Creation & Management
 - Create Events with name, date, ticket price, max supply, and IPFS-hosted metadata
-- Organizer Dashboard to manage all created events
+- Organizer Dashboard to manage all created events     
 - On-chain event contract deployment using smart contracts
 ![Screenshot 2025-04-30 004517](https://github.com/user-attachments/assets/d4d85276-95f3-4fcc-a67e-7409bda92ddf)
 
 ### 🎫 Ticketing System
 - Buy NFT Tickets from event organizers
-- Transfer Tickets between wallet addresses
+- Transfer Tickets between wallet addresses  
 - Marketplace Integration:
   - List owned tickets with custom prices and expiration dates
   - Cancel listings any time
