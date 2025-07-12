@@ -160,4 +160,4 @@ Visit the app at http://localhost:3000
 - Fiat onramps for ticket purchase
 - Real-time analytics dashboard
 - Email & calendar integration
-- On-chain ticket history  viewer
+- On-chain ticket history viewer
